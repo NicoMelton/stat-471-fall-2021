@@ -33,3 +33,5 @@ print(ans)
 ```
 
 **2+2=`r ans`**
+
+We find that 2+2=4.

@@ -1,19 +1,12 @@
 ---
 title: 'STAT 471: Homework 0'
-<<<<<<< HEAD
-author: "Shuxiao Chen"
-date: 'Due: August 31, 2021'
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-=======
-author: "FirstName LastName"
+
+author: "Nico Melton"
 date: 'Due: September 1, 2021'
 output:
   pdf_document:
     number_sections: yes
-    toc: no
+    toc: yes
     toc_depth: '4'
   html_document:
     highlight: haddock

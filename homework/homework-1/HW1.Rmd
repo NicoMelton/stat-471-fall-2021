@@ -1,6 +1,6 @@
 ---
 title: 'STAT 471: Homework 1'
-author: 'Name'
+author: 'Nico Melton'
 date: 'Due: September 15, 2021 at 11:59pm'
 output:
   bookdown::pdf_document2:
@@ -91,18 +91,34 @@ library(cowplot)    # for side by side plots
 
 **Solution.**
 
+```{r, message = FALSE}
+# 
+mlb_raw <- read_csv("../../data/MLPayData_Total.csv")
+print(mlb_raw)
+```
+
+**This data matches the data description above because it contains 30 MLB teams and has all variables listed above.**
+
 
 ## Tidy (15 points)
 
 The raw data are in a messy format: Some of the column names are hard to interpret, we have data from different years in the same row, and both year-by-year and aggregate data are present. 
 
-- Tidy the data into two separate `tibbles`: one called `mlb_aggregate` containing the aggregate data and another called `mlb_yearly` containing the year-by-year data. `mlb_total` should contain columns named `team`, `payroll_aggregate`, `pct_wins_aggregate` and `mlb_yearly` should contain columns named `team`, `year`, `payroll`, `pct_wins`, `num_wins`. Comment your code to explain each step. 
+- Tidy the data into two separate `tibbles`: one called `mlb_aggregate` containing the aggregate data and another called `mlb_yearly` containing the year-by-year data. `mlb_aggregate` should contain columns named `team`, `payroll_aggregate`, `pct_wins_aggregate` and `mlb_yearly` should contain columns named `team`, `year`, `payroll`, `pct_wins`, `num_wins`. Comment your code to explain each step. 
 
 - Print these two `tibbles`. How many rows do `mlb_aggregate` and `mlb_yearly` contain, and why?
 
 [Hint: For `mlb_yearly`, the main challenge is to extract the information from the column names. To do so, you can `pivot_longer` all these column names into one column called `column_name`, `separate` this column into three called `prefix`, `year`, `suffix`, `mutate` `prefix` and `suffix` into a a new column called `tidy_col_name` that takes values `payroll`, `num_wins`, or `pct_wins`, and then `pivot_wider` to make the entries of `tidy_col_name` into column names.]
 
 **Solution.**
+
+```{r}
+# use 'select' method to select columns `team`, `payroll_aggregate`, `pct_wins_aggregate` from 
+mlb_aggregate <- mlb_raw %>% select()
+mlb_aggregate <- mlb_raw %>% select()
+  
+```
+
 
 ## Quality control (10 points)
 

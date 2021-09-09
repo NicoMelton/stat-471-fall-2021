@@ -1,7 +1,11 @@
 ---
 title: 'STAT 471: Homework 0'
+<<<<<<< HEAD
 
 author: "Nico Melton"
+=======
+author: "FirstName LastName"
+>>>>>>> 1dda25462c6e54fb34e32e2eb963731516d39d89
 date: 'Due: September 1, 2021'
 output:
   pdf_document:
@@ -28,10 +32,13 @@ This very short "homework" is meant to expose you to the R Markdown format. **It
 Evaluate the sum of 2 and 2 using an R code chunk. Then, comment on the answer you obtained. For those unfamiliar with R, read Section 4.1 [here](https://r4ds.had.co.nz/workflow-basics.html#coding-basics).
 
 ```{r}
-ans = 2 + 2
-print(ans)
+# R code here
 ```
 
+<<<<<<< HEAD
 **2+2=`r ans`**
 
 We find that 2+2=4.
+=======
+**Your answer here.**
+>>>>>>> 1dda25462c6e54fb34e32e2eb963731516d39d89

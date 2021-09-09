@@ -1,7 +1,12 @@
 ---
 title: 'STAT 471: Homework 1'
+<<<<<<< HEAD
 author: 'Nico Melton'
 date: 'Due: September 15, 2021 at 11:59pm'
+=======
+author: 'Name'
+date: 'Due: September 19, 2021 at 11:59pm'
+>>>>>>> 1dda25462c6e54fb34e32e2eb963731516d39d89
 output:
   bookdown::pdf_document2:
     number_sections: yes
@@ -92,8 +97,9 @@ library(cowplot)    # for side by side plots
 **Solution.**
 
 ```{r, message = FALSE}
-# 
+# read data using 'read_csv'
 mlb_raw <- read_csv("../../data/MLPayData_Total.csv")
+# print data using 'print'
 print(mlb_raw)
 ```
 
@@ -113,9 +119,25 @@ The raw data are in a messy format: Some of the column names are hard to interpr
 **Solution.**
 
 ```{r}
-# use 'select' method to select columns `team`, `payroll_aggregate`, `pct_wins_aggregate` from 
-mlb_aggregate <- mlb_raw %>% select()
-mlb_aggregate <- mlb_raw %>% select()
+# use 'select' to select and rename columns `team`, `payroll_aggregate`, `pct_wins_aggregate` from mlb_raw and assign  returned tiblle to mlb_aggregate
+mlb_aggregate <- mlb_raw %>% select(team = Team.name.2014, payroll_aggregate = payroll, pct_wins_aggregate = avgwin)
+
+# use 'select' to select and rename team and all yearly payroll, percent wins, and num wins variables from mlb_raw and assign to mlb_yearly
+mlb_yearly <- mlb_raw %>% select(team = Team.name.2014, !c("payroll", "avgwin")) # all vars except payroll and avgwin
+# rename all win percentage variable to have prefix pctX and no suffix (to prep for 'pivot_longer')
+mlb_yearly <- mlb_yearly %>% rename_with(~ str_sub(paste0("pct", .x), start = 1, end = 8), ends_with(".pct"))
+# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins
+mlb_yearly <- mlb_yearly %>% pivot_longer(!team, names_to = c("year", "year", "year"), names_pattern = "(.)(.)(.)")
+
+
+# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins
+# mlb_yearly <- mlb_yearly %>% pivot_longer(!team, names_to = c("year", "year", "year"), values_to = c("payroll", "pct_wins", "num_wins"), names_prefix = c("p", "pctX", "X"))
+
+
+
+# use 'select' to select columns `team`, `year`, `payroll`, `pct_wins`, `num_wins` from mlb_raw and assign to mlb_yearly
+
+mlb_yearly <- mlb_raw %>% select(team = Team.name.2014, year, payroll, pct_wins, num_wins)
   
 ```
 

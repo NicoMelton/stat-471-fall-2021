@@ -138,6 +138,21 @@ mpg %>%
 
 2. Map a continuous variable to `color`, `size`, and `shape`. How do these aesthetics behave differently for categorical vs. continuous variables?
 
+```{r}
+mpg %>%
+  ggplot() + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = cty))
+
+mpg %>%
+  ggplot() + 
+  geom_point(mapping = aes(x = displ, y = hwy, size = cty))
+
+# mpg %>%
+#   ggplot() + 
+#   geom_point(mapping = aes(x = displ, y = hwy, shape = cty))
+```
+
+
 3. What happens if you map the same variable to multiple aesthetics?
 
 4. What happens if you map an aesthetic to something other than a variable name, like `aes(colour = displ < 5)`? Note, you’ll also need to specify `x` and `y`.
@@ -172,9 +187,20 @@ If you prefer to not facet in the rows or columns dimension, use a `.` instead o
 
 1. What happens if you facet on a continuous variable?
 
+```{r}
+mpg %>%
+  ggplot() + 
+  geom_point(mapping = 
+               aes(x = displ, y = hwy)) + 
+  facet_wrap(~ cty)  
+```
+
+
 2. Why are there empty facets in the plot with `facet_grid(drv ~ cyl)`?
 
 3. Read `?facet_wrap`. What does `nrow` do? What does `ncol` do? Why doesn’t `facet_grid()` have `nrow` and `ncol` arguments?
+
+4. Why would you use `facet_wrap` over `facet_grid` for faceting on one variable, or visa versa?
 
 ## geoms
 

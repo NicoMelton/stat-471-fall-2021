@@ -41,16 +41,75 @@ library(tidyverse)
 who_raw = read_csv("https://extranet.who.int/tme/generateCSV.asp?ds=notifications")
 who_dictionary = read_csv("https://extranet.who.int/tme/generateCSV.asp?ds=dictionary")
 
+# subset data dictionary 
+who_dictionary %>% filter(variable_name %in% colnames(who)) %>% select(-dataset, -code_list)
+
 # subset columns to reduce complexity (for the purposes of this class)
 who = who_raw %>% select(colnames(tidyr::who))
 
-# subset data dictionary 
-who_dictionary %>% filter(variable_name %in% colnames(who)) %>% select(-dataset, -code_list)
+who_tidy = who %>% 
+  select(-iso2, -iso3) %>%
+  pivot_longer(-c(country, year), 
+               names_to = "col_names", 
+               values_to = "case_counts") %>%
+  mutate(col_names = str_replace(col_names, "newrel", "new_rel")) %>%
+  separate(col_names, into = c("new", "type", "sexage"), sep = "_") %>%
+  select(-new) %>%
+  separate(sexage, into = c("sex", "age"), sep = 1)
+
+who_tidy = who_tidy %>%
+  filter(!is.na(case_counts))
 ```
 
 # Data exploration
 
+```{r}
+# find how many total cases for men and women
+who_tidy %>% 
+  group_by(sex) %>%
+  summarise(total_cases = sum(case_counts))
+
+# plot the cases over time by sex
+who_tidy %>% 
+  group_by(year, sex) %>%
+  summarise(total_cases = sum(case_counts)) %>%
+  ungroup() %>%
+  ggplot(aes(x = year, y = total_cases)) + 
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~sex) +
+  theme_bw()
+
+# plot the cases over time by sex and country
+who_tidy %>%
+  group_by(country) %>%
+  summarise(total_cases = sum(case_counts)) %>%
+  arrange(desc(total_cases)) %>%
+  ungroup()
+
+```
+
 # Data modeling
 
+```{r}
+# linear regression
+cases_by_year = 
+  who_tidy %>%
+  group_by(year) %>%
+  summarise(total_cases = sum(case_counts)) %>%
+  ungroup() %>%
+  filter(year >= 1995)
+
+cases_by_year %>%
+  ggplot(aes(x = year, y = log(total_cases))) +
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x) +
+  labs(y = "Log number of cases", x = "Year") +
+  theme_bw()
+
+summary(lm(log(total_cases) ~ year, data = cases_by_year))
+
+
+```
 
 

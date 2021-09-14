@@ -1,12 +1,7 @@
 ---
 title: 'STAT 471: Homework 1'
-<<<<<<< HEAD
 author: 'Nico Melton'
-date: 'Due: September 15, 2021 at 11:59pm'
-=======
-author: 'Name'
 date: 'Due: September 19, 2021 at 11:59pm'
->>>>>>> 1dda25462c6e54fb34e32e2eb963731516d39d89
 output:
   bookdown::pdf_document2:
     number_sections: yes
@@ -126,21 +121,23 @@ mlb_aggregate <- mlb_raw %>% select(team = Team.name.2014, payroll_aggregate = p
 mlb_yearly <- mlb_raw %>% select(team = Team.name.2014, !c("payroll", "avgwin")) # all vars except payroll and avgwin
 # rename all win percentage variable to have prefix pctX and no suffix (to prep for 'pivot_longer')
 mlb_yearly <- mlb_yearly %>% rename_with(~ str_sub(paste0("pct", .x), start = 1, end = 8), ends_with(".pct"))
-# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins
-mlb_yearly <- mlb_yearly %>% pivot_longer(!team, names_to = c("year", "year", "year"), names_pattern = "(.)(.)(.)")
-
-
-# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins
-# mlb_yearly <- mlb_yearly %>% pivot_longer(!team, names_to = c("year", "year", "year"), values_to = c("payroll", "pct_wins", "num_wins"), names_prefix = c("p", "pctX", "X"))
-
-
-
-# use 'select' to select columns `team`, `year`, `payroll`, `pct_wins`, `num_wins` from mlb_raw and assign to mlb_yearly
-
-mlb_yearly <- mlb_raw %>% select(team = Team.name.2014, year, payroll, pct_wins, num_wins)
-  
+# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins seperatly
+payroll_yearly <- mlb_yearly %>% 
+  select(team, matches("p\\d")) %>%
+  pivot_longer(!team, names_to = "year", names_prefix = "p", values_to = "payroll")
+pct_wins_yearly <- mlb_yearly %>%
+  select(team, starts_with("pctX")) %>%
+  pivot_longer(!team, names_to = "year", names_prefix = "pctX", values_to = "pct_wins")
+num_wins_yearly <- mlb_yearly %>%
+  select(team, starts_with("X")) %>%
+  pivot_longer(!team, names_to = "year", names_prefix = "X", values_to = "num_wins")
+# use 'merge' to combine each long format data set, override mlb_yearly
+mlb_yearly <- payroll_yearly %>% 
+  merge(pct_wins_yearly, by = c("team", "year"), all = TRUE) %>%
+  merge(num_wins_yearly, by = c("team", "year"), all = TRUE)
 ```
 
+**TODO: add description of solution? **
 
 ## Quality control (10 points)
 
@@ -153,6 +150,10 @@ It's always a good idea to check whether a dataset is internally consistent. In 
 - Create scatter plots of `payroll_aggregate_computed` versus `payroll_aggregate` and `pct_wins_` `aggregate_computed` versus `pct_wins_aggregate`, including a 45$^\circ$ line in each. Display these scatter plots side by side, and comment on the relationship between the computed and provided aggregate statistics.  
 
 **Solution.**
+
+```{r}
+
+```
 
 
 # Explore (40 points for correctness; 7 points for presentation)

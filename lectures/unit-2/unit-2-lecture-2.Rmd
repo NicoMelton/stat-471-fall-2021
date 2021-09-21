@@ -115,7 +115,7 @@ train_data %>%
   geom_point() + 
   stat_function(fun = f, aes(colour = "Truth"), size = 1) + 
   geom_smooth(method = "lm", 
-              formula = "y ~ splines::ns(x, df = 2)",
+              formula = "y ~ splines::ns(x, df = 7)",
               aes(colour = "Fit"), se = FALSE) + 
   scale_colour_manual(values = c("red", "blue")) +
   theme_bw() + theme(legend.title = element_blank())
@@ -237,7 +237,8 @@ bias_variance
 ```
 Based on this information, how do we compute expected test error?
 ```{r, eval = F}
-bias_variance %>% mutate(expected_test_error = ???)
+bias_variance %>% mutate(expected_test_error = 
+                           sq_bias + variance + irreducible_error)
 ```
 
 ## Sanity check 1: does the variance match the formula?
@@ -245,7 +246,7 @@ bias_variance %>% mutate(expected_test_error = ???)
 What is the formula for overall variance of the fit for a linear regression model?
 ```{r, eval = F}
 # formula for mean variance:
-variance_formula = ???
+variance_formula = sigma^2 * 6/ 50
 ```
 Does this match the variance obtained above?
 
@@ -326,11 +327,21 @@ What trends do we observe in this plot? What appears to be the best degrees of f
 What happens if we increase the noise standard deviation? What happens if we decrease it?
 ```{r}
 # try increasing noise level
+f = function(x)(sin(3*x))
+sigma = 2
+n = 50
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```
 
 
 ```{r}
 # try decreasing noise level
+f = function(x)(sin(3*x))
+sigma = 0.5
+n = 50
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```
 
 # Varying the sample size
@@ -338,9 +349,20 @@ What happens if we increase the noise standard deviation? What happens if we dec
 What happens if we decrease the sample size? What happens if we increase it?
 ```{r}
 # try decreasing sample size
+f = function(x)(sin(3*x))
+sigma = 1
+n = 10
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```
+
 ```{r}
 # try increasing sample size
+f = function(x)(sin(3*x))
+sigma = 1
+n = 1000
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```
 
 # Varying the complexity of the underlying function
@@ -349,8 +371,18 @@ What happens if we decrease the complexity of the underlying function `f`? What 
 
 ```{r}
 # try decreasing complexity of f
+f = function(x)(sin(1*x))
+sigma = 1
+n = 50
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```
 
 ```{r}
 # try increasing complexity of f
+f = function(x)(sin(5*x))
+sigma = 1
+n = 50
+resamples = 100
+bias_variance_tradeoff(f, sigma, n, resamples)
 ```

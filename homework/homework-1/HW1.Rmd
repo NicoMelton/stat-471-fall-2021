@@ -37,7 +37,7 @@ The collaboration policy is as stated on the Syllabus:
 
 In accordance with this policy, 
 
-*Please list anyone you discussed this homework with:* 
+*Please list anyone you discussed this homework with: Kennedy Manley* 
 
 *Please list what external references you consulted (e.g. articles, books, or websites):*
 
@@ -77,6 +77,9 @@ library(tidyverse)  # tidyverse
 library(ggrepel)    # for scatter plot point labels
 library(kableExtra) # for printing tables
 library(cowplot)    # for side by side plots
+library(gridExtra)  # for plotting side by side
+library(kableExtra) # for printing better tables
+library(stargazer)  # for displaying regression results
 ```
 
 # Wrangle (30 points for correctness; 5 points for presentation)
@@ -94,11 +97,10 @@ library(cowplot)    # for side by side plots
 ```{r, message = FALSE}
 # read data using 'read_csv'
 mlb_raw <- read_csv("../../data/MLPayData_Total.csv")
-# print data using 'print'
-print(mlb_raw)
+mlb_raw # print
 ```
 
-**This data matches the data description above because it contains 30 MLB teams and has all variables listed above.**
+**The data has 30 rows and 54 columns where each row is a team and each column is a variable. This data matches the data description above because it contains 30 MLB teams and has all variables listed above including `payroll`, `avgwin`, `Team.name.2014`, `p1998`-`p2014`, `X1998`-`X2014`, and `X1998.pct`-`X2014.pct`.**
 
 
 ## Tidy (15 points)
@@ -114,30 +116,43 @@ The raw data are in a messy format: Some of the column names are hard to interpr
 **Solution.**
 
 ```{r}
-# use 'select' to select and rename columns `team`, `payroll_aggregate`, `pct_wins_aggregate` from mlb_raw and assign  returned tiblle to mlb_aggregate
-mlb_aggregate <- mlb_raw %>% select(team = Team.name.2014, payroll_aggregate = payroll, pct_wins_aggregate = avgwin)
+# use 'select' to select and rename columns `team`, `payroll_aggregate`, 
+#`pct_wins_aggregate` from 'mlb_raw' and assign returned tibble to 'mlb_aggregate'
+mlb_aggregate = mlb_raw %>% 
+  select(team = Team.name.2014, 
+         payroll_aggregate = payroll, 
+         pct_wins_aggregate = avgwin)
+mlb_aggregate # print
 
-# use 'select' to select and rename team and all yearly payroll, percent wins, and num wins variables from mlb_raw and assign to mlb_yearly
-mlb_yearly <- mlb_raw %>% select(team = Team.name.2014, !c("payroll", "avgwin")) # all vars except payroll and avgwin
-# rename all win percentage variable to have prefix pctX and no suffix (to prep for 'pivot_longer')
-mlb_yearly <- mlb_yearly %>% rename_with(~ str_sub(paste0("pct", .x), start = 1, end = 8), ends_with(".pct"))
-# use 'pivot_longer' to pivot the yearly data in each row to long format for payroll, pct_wins, and num_wins seperatly
-payroll_yearly <- mlb_yearly %>% 
+# use 'select' to select and rename team and all yearly payroll, percent wins,
+#and number of wins variables from 'mlb_raw' and assign to 'mlb_yearly'
+mlb_yearly = mlb_raw %>% 
+  select(team = Team.name.2014, 
+         !c("payroll", "avgwin")) # all vars except `payroll` and `avgwin`
+# rename all win percentage variable to have prefix pctX 
+#and no suffix (to prep for 'pivot_longer')
+mlb_yearly = mlb_yearly %>% 
+  rename_with(~ str_sub(paste0("pct", .x), start = 1, end = 8), 
+              ends_with(".pct"))
+# use 'pivot_longer' to pivot the yearly data in each row to long 
+#format for `payroll`, `pct_wins`, and `num_wins` separately
+payroll_yearly = mlb_yearly %>% 
   select(team, matches("p\\d")) %>%
   pivot_longer(!team, names_to = "year", names_prefix = "p", values_to = "payroll")
-pct_wins_yearly <- mlb_yearly %>%
+pct_wins_yearly = mlb_yearly %>%
   select(team, starts_with("pctX")) %>%
   pivot_longer(!team, names_to = "year", names_prefix = "pctX", values_to = "pct_wins")
-num_wins_yearly <- mlb_yearly %>%
+num_wins_yearly = mlb_yearly %>%
   select(team, starts_with("X")) %>%
   pivot_longer(!team, names_to = "year", names_prefix = "X", values_to = "num_wins")
-# use 'merge' to combine each long format data set, override mlb_yearly
-mlb_yearly <- payroll_yearly %>% 
-  merge(pct_wins_yearly, by = c("team", "year"), all = TRUE) %>%
-  merge(num_wins_yearly, by = c("team", "year"), all = TRUE)
+# use 'full_join' to combine each long format data set, override 'mlb_yearly'
+mlb_yearly = payroll_yearly %>% 
+  full_join(pct_wins_yearly, by = c("team", "year")) %>%
+  full_join(num_wins_yearly, by = c("team", "year"))
+mlb_yearly # print
 ```
 
-**TODO: add description of solution? **
+**`mlb_aggregate` has 30 (one for each team) and 3 columns for `team`, `payroll_aggregate`, and `pct_wins_aggregate`. `mlb_yearly` has 510 rows and 5 columns. There are 510 rows because each of the 30 teams has 17 rows of data (one for each year between 1998 and 2014). The 5 columns include the 3 variables of interest (`payroll`, `pct_wins`, and `num_wins`) and `year` and `team` variables.**
 
 ## Quality control (10 points)
 
@@ -152,9 +167,33 @@ It's always a good idea to check whether a dataset is internally consistent. In 
 **Solution.**
 
 ```{r}
+# create new tibble 'mlb_aggregate_computed'
+mlb_aggregate_computed = mlb_yearly %>%
+  group_by(team) %>%
+  summarise(payroll_aggregate_computed = sum(payroll) / 1000,
+            pct_wins_aggregate_computed = mean(pct_wins))
+# join 'mlb_aggregate' and 'mlb_aggregate_computed'
+mlb_aggregate_joined = full_join(mlb_aggregate, mlb_aggregate_computed, by = "team")
 
+# scatter plot of 'payroll_aggregate_computed' vs 'payroll_aggregate'
+plot_payroll = mlb_aggregate_joined %>%
+  ggplot(aes(x = payroll_aggregate, y = payroll_aggregate_computed)) +
+  geom_point() + 
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Computed Aggregate Payroll (billions of dollars)", 
+       y = "Aggregate Payroll (billions of dollars)") +
+  theme_bw()
+# scatter plot of 'pct_wins_aggregate' vs 'pct_wins_aggregate_computed'
+plot_pct_wins = mlb_aggregate_joined %>%
+  ggplot(aes(x = pct_wins_aggregate, y = pct_wins_aggregate_computed)) +
+  geom_point() + 
+  geom_abline(intercept = 0, slope = 1) +
+  labs(x = "Computed Aggregate Percent Wins", y = "Aggregate Percent Wins") +
+  theme_bw()
+# plot aggregate payroll and percent wins side by side
+grid.arrange(plot_payroll, plot_pct_wins, ncol=2)
 ```
-
+**The computed aggregate payroll for all teams is slightly less than the provided aggregate payroll. The computed aggregate percent wins are similar to the provided aggregate percent wins but many teams have either slightly higher or slightly lower computed values - there is variation from the provided values.**
 
 # Explore (40 points for correctness; 7 points for presentation)
 
@@ -174,6 +213,54 @@ Now that the data are in tidy format, we can explore them by producing visualiza
 
 **Solution.**
 
+```{r}
+# create dataset with team name and mean payroll for plotting mean line in facets
+mean_payroll = mlb_yearly %>%
+  group_by(team) %>%
+  summarise(mean_payroll = mean(payroll)) %>%
+  ungroup()
+# plot payroll as a function of year, facet wrap by team
+mlb_yearly %>% 
+  ggplot(aes(x = as.integer(year), y = payroll)) +
+  geom_point(size = 0.7) + 
+  facet_wrap(~ team, nrow = 6) +
+  geom_hline(aes(yintercept = mean_payroll), 
+             color = "red", 
+             linetype = "dashed", 
+             data = mean_payroll) +
+  theme_bw(base_size = 7) +
+  labs(x = "Year", y = "Payroll (in Millions of Dollars)")
+```
+
+```{r, message=FALSE}
+# get teams with the highest computed aggregate payroll
+mlb_aggregate_computed %>%
+  arrange(desc(payroll_aggregate_computed)) %>%
+  select(Team = team, 
+         "Aggregate Computed Payroll (in Billions of Dollars)" = 
+           payroll_aggregate_computed) %>%
+  slice_head(n = 3) %>%
+  kbl()
+```
+
+```{r}
+# get the teams with the greatest percentage increase in payroll from 1998 to 2014
+mlb_yearly %>% 
+  select(team, year, payroll) %>%
+  pivot_wider(names_from = "year", 
+              values_from = "payroll", 
+              names_prefix = "payroll_") %>%
+  mutate(pct_increase = (payroll_2014 - payroll_1998) / payroll_1998 * 100) %>%
+  arrange(desc(pct_increase)) %>%
+  select(Team = team, 
+         "Percentage Increase (1998-2014)" = pct_increase, 
+         starts_with("payroll")) %>%
+  slice_head(n = 3) %>%
+  kbl()
+```
+**Payroll aggregate are reflected implicitly in the plot above through the mean payroll line for each team. Because mean payroll is just aggregate payroll divided by the number of years and all teams have the same years, we can see which teams have the highest `payroll_aggregate_computed` by looking at the mean payroll lines. We can see that the top 3 teams with the highest `payroll_aggregate_computed` have the highest mean payroll lines (red dotted line in the plot). We can see the `pct_increase` measure reflected in the plot by looking at the vertical distance between the first and last plotted payroll point for each team. Teams with the largest distance had the largest percentage increase payroll over the 17 years period.**
+
+
 ## Win percentage across years (10 points)
 
 - Plot `pct_wins` as a function of `year` for each of the 30 teams, faceting the plot by `team` and adding a red dashed horizontal line for the average `pct_wins` across years of each team. 
@@ -182,9 +269,55 @@ Now that the data are in tidy format, we can explore them by producing visualiza
 
 - Using `dplyr`, identify the three teams with the most erratic `pct_wins` across years (as measured by the standard deviation, call it `pct_wins_sd`) and print a table of these teams along with `pct_wins_sd`. 
 
-- How are the metrics `payroll_aggregate_computed` and `pct_wins_sd` reflected in the plot above, and how can we see that the two sets of teams identified above are the top three in terms of these metrics?
+- How are the metrics `pct_wins_aggregate` and `pct_wins_sd` reflected in the plot above, and how can we see that the two sets of teams identified above are the top three in terms of these metrics?
 
 **Solution.**
+
+```{r}
+# create dataset with 'team' and 'mean_pct_wins' for plotting mean line in facets
+mean_pct_wins = mlb_yearly %>%
+  group_by(team) %>%
+  summarise(mean_pct_wins = mean(pct_wins)) %>%
+  ungroup()
+# plot 'pct_wins' as a function of 'year', facet wrap by team
+mlb_yearly %>% 
+  ggplot(aes(x = as.integer(year), y = pct_wins)) +
+  geom_point(size = 0.7) + 
+  facet_wrap(~ team, nrow = 6) +
+  geom_hline(aes(yintercept = mean_pct_wins), 
+             color = "red", 
+             linetype = "dashed", 
+             data = mean_pct_wins) +
+  theme_bw(base_size = 7) +
+  labs(x = "Year", y = "Percent Wins (Win Ratio)")
+```
+
+```{r}
+# get the teams with the highest aggregated percent wins
+mlb_aggregate %>%
+  arrange(desc(pct_wins_aggregate)) %>%
+  select(Team = team, 
+         "Aggregate Percent Wins (Win Ratio)" = pct_wins_aggregate) %>%
+  slice_head(n = 3) %>%
+  kbl()
+```
+
+```{r}
+# get the teams with the most erratic 'pct_wins' across all years
+mlb_yearly %>%
+  select(team, year, pct_wins) %>%
+  group_by(team) %>%
+  mutate(pct_wins_sd  = sd(pct_wins)) %>%
+  select(Team = team, 
+         "Standard Deviation of Percent Wins" = pct_wins_sd) %>%
+  ungroup() %>%
+  distinct(Team, .keep_all = TRUE) %>%
+  arrange(desc("Standard Deviation of Percent Wins")) %>%
+  slice_head(n = 3) %>%
+  kbl()
+```
+
+**Percent wins aggregate is reflected implicitly in the plot above through the mean percent wins line for each team. Because mean percent wins is just aggregate percent wins divided by the number of years and all teams have the same years, we can see which teams have the highest `pct_wins_aggregate` by looking at the mean percent wins lines. Percent win standard deviation can be seen in the plots as the spread/distance of the points around the mean line for each team. Teams with the highest standard deviation have their points, on average, further from the mean percentage win line.**
 
 ## Win percentage versus payroll (10 points)
 
@@ -195,6 +328,20 @@ The analysis goal is to study the relationship between win percentage and payrol
 - Is the relationship between `payroll` and `pct_wins` positive or negative? Is this what you would expect, and why? 
 
 **Solution.**
+
+```{r, message = FALSE}
+# plot `pct_wins` by `payroll` 
+mlb_aggregate %>%
+  ggplot(aes(x = payroll_aggregate, y = pct_wins_aggregate)) +
+  geom_point() +
+  geom_text_repel(aes(label = team), size = 3.5, box.padding = unit(0.25, "lines")) +
+  geom_smooth(method = "lm", se = FALSE) + 
+  theme_bw() +
+  labs(x = "Aggregate Payroll from 1998-2014 (Billions of Dollars)", 
+       y = "Percentage of Wins (Mean from 1998-2014)")
+```
+
+**The relationship between payroll and percent wins is positive. This is what I would expect because teams with more money can presumably pay better players that in turn contribute to more wins.**
 
 ## Team efficiency (5 points)
 
@@ -208,6 +355,17 @@ Side note: The movie ["Moneyball"](https://www.imdb.com/title/tt1210166/) portra
 
 **Solution.**
 
+```{r}
+# find the most efficient teams and display in a table
+mlb_aggregate %>%
+  mutate(efficiency = pct_wins_aggregate / payroll_aggregate) %>%
+  select(team, efficiency, pct_wins_aggregate, payroll_aggregate) %>%
+  arrange(desc(efficiency)) %>%
+  slice_head(n = 3) %>%
+  kbl()
+```
+
+**All three of these teams lie above the fitted line for payroll vs percentage wins. This means these teams yield a higher than expected percentage wins based on their payroll.**
 
 # Model (15 points for correctness; 3 points for presentation)
 
@@ -221,6 +379,15 @@ Finally, we build a predictive model for `pct_wins_aggregate` in terms of `payro
 
 **Solution.**
 
+```{r}
+# create model for `pct_wins_aggregate` in terms of `payroll_aggregate` 
+#and display results
+model1 = lm(pct_wins_aggregate ~ payroll_aggregate, data = mlb_aggregate)
+stargazer(model1, type = "text")
+```
+
+**The coefficient of `payroll_aggregate` is 0.061. This means that for for every 1 billion dollar increase in payroll, the expected increase in win percentage is 0.061 or 6.1%. R^2 represents the fraction of the variation in `pct_wins_aggregate` explained by `payroll_aggregate`. This is 0.494 or 49.4%.**
+
 ## Comparing Oakland Athletics to the linear trend (10 points)
 
 - Given their payroll, what is the linear regression prediction for the winning percentage of the Oakland Athletics? What was their actual winning percentage?
@@ -228,3 +395,30 @@ Finally, we build a predictive model for `pct_wins_aggregate` in terms of `payro
 - Now run a linear regression of `payroll_aggregate` on `pct_wins_aggregate`. What is the linear regression prediction for the `payroll_aggregate` of the Oakland Athletics? What was their actual payroll?
 
 **Solution.**
+
+```{r}
+# get the Oakland Athletics' aggregate payroll and aggregate percent wins
+oakland_payroll_aggregate = mlb_aggregate %>% 
+  filter(team == "Oakland Athletics") %>%
+  pull(payroll_aggregate)
+oakland_pct_wins_aggregate = mlb_aggregate %>% 
+  filter(team == "Oakland Athletics") %>%
+  pull(pct_wins_aggregate)
+# prediction for winning percentage
+0.423 + (0.061 * oakland_payroll_aggregate)
+# actual winning percentage
+oakland_pct_wins_aggregate
+
+# create model for `payroll_aggregate` in terms of `pct_wins_aggregate` 
+#and display results
+model2 = lm(payroll_aggregate ~ pct_wins_aggregate, data = mlb_aggregate)
+stargazer(model2, type = "text")
+# prediction for payroll
+-2.780 + (8.060 * oakland_pct_wins_aggregate)
+# actual payroll
+oakland_payroll_aggregate
+```
+
+**The linear regression prediction for Oakland Athletics' winning percentage is 0.474. Their actual winning percentage is 0.545**
+
+**The linear regression prediction for Oakland Athletics' aggregate payroll is 1.61 billion dollars. Their actual payroll is 0.841 billion dollars.**

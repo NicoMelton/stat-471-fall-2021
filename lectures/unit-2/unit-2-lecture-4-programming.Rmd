@@ -40,8 +40,16 @@ default_validation = default_data %>%
 
 ```{r}
 # visualize default as a function of `balance` and `income`
-
+default_train %>%
+  ggplot(aes(x = balance, y = income,
+            color =  factor(default))) +
+  geom_point() + 
+  theme_bw()
 # visualize default as a function of just `balance`
+default_train %>%
+  ggplot(aes(x = balance, y = default)) +
+  geom_jitter(width = 0, height = 0.1) + 
+  theme_bw()
 ```
 
 Next, let's apply KNN with K = 25, using just `balance` as a feature.

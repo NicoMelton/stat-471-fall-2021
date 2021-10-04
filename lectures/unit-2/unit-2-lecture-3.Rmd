@@ -71,6 +71,12 @@ train_data
 ```
 Question: How would we select the data in fold number 1? How would we select all the data except fold number 1?
 
+```{r}
+train_data %>%
+  filter(fold != 1)
+```
+
+
 Let's first use cross-validation to estimate the test error for a spline fit with 5 degrees of freedom.
 ```{r}
 # create a vector of out-of-fold predictions

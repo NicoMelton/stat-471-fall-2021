@@ -70,6 +70,7 @@ lasso_fit$lambda.1se
 
 To get the fitted coefficients at the selected value of lambda:
 ```{r}
+# returns the coefs on the original scale not the standardized scale
 coef(lasso_fit, s = "lambda.1se") %>% head()
 coef(lasso_fit, s = "lambda.min") %>% head()
 ```

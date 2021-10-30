@@ -145,7 +145,8 @@ readmission_train %>% filter(age_group=='0-19') %>% count(adm_source) %>% rename
 2. For each unique (gender, age_group) combination, calculate the sum of `num_outpatient`, `num_inpatient`, `num_emergency`, then calculate the total sum of those three variables. Tabulate the result in a fancy table.
 
 ```{r}
-readmission_train %>% group_by(gender, age_group) %>% 
+readmission_train %>% 
+  group_by(gender, age_group) %>% 
   summarise(total_num_outpatient=sum(num_outpatient),
             total_num_inpatient=sum(num_inpatient),
             total_num_emergency=sum(num_emergency)) %>%

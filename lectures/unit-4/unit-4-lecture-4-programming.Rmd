@@ -162,7 +162,9 @@ optimal_num_trees
 
 Let's now interpret our tuned model. To get the variable importance measures, we use `summary`, specifying the number of trees via the `n.trees` argument:
 ```{r}
-summary(gbm_fit_optimal, n.trees = optimal_num_trees, plotit = FALSE)
+summary(gbm_fit_optimal, 
+        n.trees = optimal_num_trees, 
+        plotit = FALSE)
 ```
 
 We can also make the partial dependence plots for the different features using `plot`:
@@ -175,7 +177,8 @@ plot(gbm_fit_optimal, i.var = "CRuns", n.trees = optimal_num_trees)
 
 We can make predictions using `predict`, as usual, but we need to specify the number of trees to use:
 ```{r}
-gbm_predictions = predict(gbm_fit_optimal, n.trees = optimal_num_trees,
+gbm_predictions = predict(gbm_fit_optimal, 
+                          n.trees = optimal_num_trees,
                           newdata = Hitters_test)
 gbm_predictions
 ```
@@ -268,9 +271,12 @@ cv_errors %>%
 
 Aha! We see some overfitting! For which values of interaction depth do we see more overfitting, and why? What is the optimal interaction depth?
 
+3 is the most complex so you are fitting a more complex model faster so you overfit more quickly.
+
 ```{r}
 gbm_fit_optimal = gbm_fit_1
 optimal_num_trees = gbm.perf(gbm_fit_1, plot.it = FALSE) 
+optimal_num_trees
 ```
 
 We can calculate variable importance scores as before:

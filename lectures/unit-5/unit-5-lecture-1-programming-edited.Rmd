@@ -12,6 +12,7 @@ In this R demo, we'll get warmed up for deep learning by fitting a multi-class l
 First let's load some libraries:
 ```{r, message = FALSE}
 library(keras)     # for deep learning
+# use_condaenv("r-tensorflow")
 library(tidyverse) # for everything else
 ```
 

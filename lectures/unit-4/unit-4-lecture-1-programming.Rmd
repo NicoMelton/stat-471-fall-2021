@@ -72,7 +72,7 @@ tree_fit$variable.importance
 The `control` argument of `rpart` can be specified to control how far down the tree is fit. In particular, the default for `control` is
 ```{r, eval = FALSE}
 # this code is not meant to be run
-control = rpart.control(minsplit = 20, minbucket = round(minsplit/3))
+control = rpart.control(minsplit = 20, minbucket = round(20/3))
 ```
 
 Here, `minsplit` is the minimum number of observations that must exist in a node in order for a split to be attempted, and `minbucket` is the minimum number of observations in any terminal (i.e. leaf) node. The larger these numbers, the fewer nodes there will be in the tree. 

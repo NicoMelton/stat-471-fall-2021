@@ -35,6 +35,7 @@ Hitters_test = Hitters %>% filter(!(row_number() %in% train_samples))
 As before, we fit a regression tree by calling `rpart`:
 ```{r}
 tree_fit = rpart(Salary ~ ., data = Hitters_train)
+rpart.plot(tree_fit)
 ```
 
 ## Tree pruning and cross validation
